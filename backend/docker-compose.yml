@@ -1,6 +1,8 @@
+version: "3.8"
+
 services:
   db:
-    image: postgres:latest
+    image: postgres:16
     restart: always
     environment:
       POSTGRES_USER: myuser
@@ -9,7 +11,16 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql
+
+  redis:
+    image: redis:7
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
 
 volumes:
   pgdata:
+  redisdata:
