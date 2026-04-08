@@ -297,6 +297,41 @@ export default function Home() {
                 </div>
               )}
 
+              {report && (
+                <div className="grid grid-cols-1 gap-6 mb-6">
+                  <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                    <h2 className="text-sm font-bold text-gray-800 mb-4 uppercase tracking-wide flex items-center gap-2">
+                      ⚖️ Full Compliance Findings
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                       <div>
+                         <span className="text-gray-500 block text-[10px] uppercase font-extrabold mb-2 tracking-widest">Actionable Recommendations</span>
+                         <ul className="space-y-2">
+                           {report.recommendations?.map((r: string, i: number) => (
+                             <li key={i} className="text-xs font-bold text-gray-800 bg-blue-50/50 p-3 rounded-lg border border-blue-100 border-l-4 border-l-blue-600 shadow-sm">{r}</li>
+                           ))}
+                         </ul>
+                       </div>
+                       <div>
+                          <span className="text-gray-500 block text-[10px] uppercase font-extrabold mb-2 tracking-widest">AI Consistency Checks</span>
+                          <ul className="space-y-2 bg-gray-50 p-4 rounded-lg border border-gray-100">
+                            {report.consistencyChecks?.map((chk: any, i: number) => (
+                              <li key={i} className="flex items-start gap-2 text-xs font-bold border-b border-gray-200 pb-2 last:border-0 last:pb-0">
+                                {chk.status === 'OK' || chk.status === 'PASSED' ? (
+                                  <CheckCircle className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
+                                ) : (
+                                  <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                                )}
+                                <span className="text-gray-800 leading-snug">{chk.description || chk.message || JSON.stringify(chk)}</span>
+                              </li>
+                            ))}
+                          </ul>
+                       </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {documents.length > 0 && (
               <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-6">
                 <h2 className="text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide flex items-center gap-2">
@@ -337,41 +372,6 @@ export default function Home() {
                     {documents.map((doc, i) => (
                       <DocumentCard key={i} doc={doc} />
                     ))}
-                  </div>
-                </div>
-              )}
-
-              {report && (
-                <div className="grid grid-cols-1 gap-6 pb-20 mt-4">
-                  <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200">
-                    <h2 className="text-lg font-bold text-gray-800 mb-6 uppercase tracking-wide flex items-center gap-2">
-                      ⚖️ Full Compliance Findings
-                    </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                       <div>
-                         <span className="text-gray-500 block text-xs uppercase font-extrabold mb-3 tracking-widest">Actionable Recommendations</span>
-                         <ul className="space-y-3">
-                           {report.recommendations?.map((r: string, i: number) => (
-                             <li key={i} className="text-sm font-bold text-gray-800 bg-blue-50/50 p-4 rounded-xl border border-blue-100 border-l-4 border-l-blue-600 shadow-sm">{r}</li>
-                           ))}
-                         </ul>
-                       </div>
-                       <div>
-                          <span className="text-gray-500 block text-xs uppercase font-extrabold mb-3 tracking-widest">AI Consistency Checks</span>
-                          <ul className="space-y-4 bg-gray-50 p-6 rounded-xl border border-gray-100">
-                            {report.consistencyChecks?.map((chk: any, i: number) => (
-                              <li key={i} className="flex items-start gap-3 text-sm font-bold border-b border-gray-200 pb-3 last:border-0 last:pb-0">
-                                {chk.status === 'OK' || chk.status === 'PASSED' ? (
-                                  <CheckCircle className="w-5 h-5 text-green-500 shrink-0 mt-0.5" />
-                                ) : (
-                                  <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
-                                )}
-                                <span className="text-gray-800 leading-snug">{chk.description || chk.message || JSON.stringify(chk)}</span>
-                              </li>
-                            ))}
-                          </ul>
-                       </div>
-                    </div>
                   </div>
                 </div>
               )}

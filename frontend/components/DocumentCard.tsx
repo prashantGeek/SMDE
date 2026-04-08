@@ -1,4 +1,4 @@
-import { CheckCircle, AlertCircle, Clock, ShieldAlert, FileText, User } from "lucide-react";
+import { CheckCircle, AlertCircle, Clock, ShieldAlert, FileText, User, Download } from "lucide-react";
 
 export default function DocumentCard({ doc }: { doc: any }) {
   const getStatusColor = (status: string) => {
@@ -35,8 +35,16 @@ export default function DocumentCard({ doc }: { doc: any }) {
           </div>
           <p className="text-sm text-slate-500 mt-1">{doc.fileName} • Role: <span className="font-semibold text-slate-700">{doc.applicableRole}</span></p>
         </div>
-        <div className={`px-2.5 py-1 rounded text-xs font-bold ${getConfidenceColor(doc.confidence)}`}>
-          {doc.confidence} CONFIDENCE
+        <div className="flex items-center gap-3">
+          {doc.s3Url && (
+             <a href={doc.s3Url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 border border-indigo-200 rounded text-xs font-bold transition-colors shadow-sm">
+                <Download className="w-3.5 h-3.5"/>
+                Download
+             </a>
+          )}
+          <div className={`px-2.5 py-1.5 rounded-md border text-xs font-bold shadow-sm ${getConfidenceColor(doc.confidence)} border-opacity-20`}>
+            {doc.confidence} CONFIDENCE
+          </div>
         </div>
       </div>
 
