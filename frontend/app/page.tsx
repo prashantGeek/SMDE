@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { UploadCloud, CheckCircle, FileText, AlertCircle, RefreshCw, ShieldAlert, User, Clock, Plus } from "lucide-react";
+import { UploadCloud, CheckCircle, FileText, AlertCircle, RefreshCw, ShieldAlert, User, Clock, Plus, Trash2 } from "lucide-react";
 import DocumentCard from "../components/DocumentCard";
 
 export default function Home() {
@@ -36,7 +36,7 @@ export default function Home() {
       setDocuments(res.data.documents || []);
       setHealth(res.data.overallHealth || "OK");
       setDetectedRole(res.data.detectedRole || "UNKNOWN");
-      setReport(null);
+      setReport(res.data.validationResult || null);
       fetchAllSessions(); // refresh the sidebar list in case names updated
     } catch (e) {
       console.error("Failed to fetch session:", e);
@@ -126,6 +126,20 @@ export default function Home() {
     }
   };
 
+  const handleDeleteSession = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!confirm("Are you sure you want to completely delete this candidate and their documents? This cannot be undone.")) return;
+
+    try {
+      await axios.delete(`/api/sessions/${id}`);
+      if (sessionId === id) handleCreateNewUser();
+      fetchAllSessions();
+    } catch (err: any) {
+      console.error("Failed to delete session", err);
+      alert("Failed to delete the candidate.");
+    }
+  };
+
   const seafarer = {
     name: documents.find(d => d.holderName)?.holderName || '—',
     dob: documents.find(d => d.dateOfBirth)?.dateOfBirth || '—',
@@ -176,13 +190,22 @@ export default function Home() {
               <div 
                 key={s.id} 
                 onClick={() => { setSessionId(s.id); fetchSession(s.id); }}
-                className={`p-4 rounded-xl cursor-pointer border-2 transition-all ${
+                className={`group p-4 rounded-xl cursor-pointer border-2 transition-all relative ${
                   sessionId === s.id 
                   ? 'border-blue-500 bg-white shadow-md transform scale-[1.02]' 
                   : 'border-transparent bg-white shadow-sm hover:border-blue-200'
                 }`}
               >
-                <div className="font-bold text-gray-800 truncate text-base">{s.candidateName}</div>
+                <div className="flex justify-between items-start">
+                  <div className="font-bold text-gray-800 truncate text-base pr-2">{s.candidateName}</div>
+                  <button 
+                    onClick={(e) => handleDeleteSession(s.id, e)} 
+                    title="Delete Candidate"
+                    className="text-red-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded-md transition-colors opacity-0 group-hover:opacity-100"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
                 <div className="text-xs font-bold text-blue-600 mt-1 uppercase tracking-wider bg-blue-50 inline-block px-2 py-0.5 rounded">{s.role}</div>
                 <div className="text-xs text-gray-400 mt-3 flex items-center gap-1 font-medium">
                   <Clock className="w-3.5 h-3.5" /> {(new Date(s.createdAt)).toLocaleString()}
@@ -200,13 +223,6 @@ export default function Home() {
               <FileText className="text-blue-600" /> SMDE Dashboard
             </h1>
             <p className="text-sm font-medium text-gray-500 mt-1">Smart Maritime Document Extractor</p>
-          </div>
-          <div className="flex items-center gap-4">
-            {sessionId && (
-              <span className="text-sm font-mono font-bold bg-blue-50 border border-blue-200 text-blue-800 py-1.5 px-4 rounded-lg shadow-sm">
-                Session ID: {sessionId.split('-')[0]}...
-              </span>
-            )}
           </div>
         </header>
 
@@ -282,49 +298,22 @@ export default function Home() {
               )}
 
               {documents.length > 0 && (
-              <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                <div className="xl:col-span-2 bg-white p-8 rounded-2xl shadow-sm border border-gray-200">
-                  <h2 className="text-lg font-bold text-gray-800 mb-6 uppercase tracking-wide flex items-center gap-2">
-                    👤 Candidate Unified Profile
-                  </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
-                    <div className="bg-gray-50 border border-gray-100 p-4 rounded-xl shadow-sm"><span className="text-xs text-gray-400 uppercase font-bold block mb-1">Full Legal Name</span><span className="font-extrabold text-gray-900 text-xl">{seafarer.name}</span></div>
-                    <div className="bg-gray-50 border border-gray-100 p-4 rounded-xl shadow-sm"><span className="text-xs text-gray-400 uppercase font-bold block mb-1">Target Role</span><span className="font-bold text-blue-700 bg-blue-100 border border-blue-200 px-3 py-1 rounded inline-block text-lg">{seafarer.role}</span></div>
-                    <div className="border-b border-gray-100 pb-2"><span className="text-xs text-gray-400 uppercase font-bold block mb-1">Date of Birth</span><span className="font-bold text-gray-900 text-lg leading-tight">{seafarer.dob}</span></div>
-                    <div className="border-b border-gray-100 pb-2"><span className="text-xs text-gray-400 uppercase font-bold block mb-1">Nationality</span><span className="font-bold text-gray-900 text-lg leading-tight">{seafarer.nationality}</span></div>
-                    <div className="md:col-span-2"><span className="text-xs text-gray-400 uppercase font-bold block mb-1">SIRB Identity Number</span><span className="font-bold text-gray-900 text-lg leading-tight">{seafarer.sirb}</span></div>
-                  </div>
-                  {documents.some(d => d.holderName && d.holderName !== seafarer.name) && (
-                    <div className="mt-6 text-amber-800 bg-amber-50 p-4 rounded-xl text-sm font-bold flex items-center gap-3 border border-amber-200 shadow-sm">
-                      <AlertCircle className="w-5 h-5"/> Name mismatch detected deeply across different documents!
-                    </div>
-                  )}
+              <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-6">
+                <h2 className="text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide flex items-center gap-2">
+                  👤 Candidate Unified Profile
+                </h2>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                  <div className="bg-gray-50 border border-gray-100 p-2 rounded shadow-sm md:col-span-2"><span className="text-[10px] text-gray-500 uppercase font-bold block mb-0.5">Full Legal Name</span><span className="font-extrabold text-gray-900 text-sm">{seafarer.name}</span></div>
+                  <div className="bg-gray-50 border border-gray-100 p-2 rounded shadow-sm"><span className="text-[10px] text-gray-500 uppercase font-bold block mb-0.5">Target Role</span><span className="font-bold text-blue-700 bg-blue-100 border border-blue-200 px-1.5 py-0.5 rounded inline-block text-xs">{seafarer.role}</span></div>
+                  <div className="p-1"><span className="text-[10px] text-gray-500 uppercase font-bold block mb-0.5">Date of Birth</span><span className="font-bold text-gray-900 text-xs leading-tight">{seafarer.dob}</span></div>
+                  <div className="p-1"><span className="text-[10px] text-gray-500 uppercase font-bold block mb-0.5">Nationality</span><span className="font-bold text-gray-900 text-xs leading-tight">{seafarer.nationality}</span></div>
+                  <div className="p-1 md:col-span-2"><span className="text-[10px] text-gray-500 uppercase font-bold block mb-0.5">SIRB Identity Number</span><span className="font-bold text-gray-900 text-xs leading-tight">{seafarer.sirb}</span></div>
                 </div>
-
-                <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 flex flex-col">
-                  <h2 className="text-lg font-bold text-gray-800 mb-6 uppercase tracking-wide">
-                    Aggregated Health
-                  </h2>
-                  <div className="space-y-4 flex-1 flex flex-col">
-                    <div className="flex justify-between items-center bg-gray-50 p-4 rounded-xl border border-gray-100">
-                      <span className="text-gray-500 font-bold uppercase text-xs">Total Docs Uploaded</span>
-                      <span className="font-black text-2xl text-gray-800">{documents.length}</span>
-                    </div>
-                    <div className={`flex-1 p-6 rounded-xl flex flex-col items-center justify-center border-2 ${
-                      health === 'CRITICAL' ? 'bg-red-50 border-red-200 text-red-800' :
-                      health === 'WARN' ? 'bg-amber-50 border-amber-200 text-amber-800' :
-                      'bg-green-50 border-green-200 text-green-800'
-                    }`}>
-                      <span className="opacity-70 block text-xs font-bold mb-2 uppercase tracking-widest">Health Status</span>
-                      <span className="font-black text-3xl flex items-center gap-2">
-                        {health === 'CRITICAL' && '🔴 CRITICAL'}
-                        {health === 'WARN' && '🟡 WARNING'}
-                        {health === 'OK' && '🟢 OK'}
-                      </span>
-                    </div>
+                {documents.some(d => d.holderName && d.holderName !== seafarer.name) && (
+                  <div className="mt-3 text-amber-800 bg-amber-50 p-2 rounded text-xs font-bold flex items-center gap-2 border border-amber-200 shadow-sm">
+                    <AlertCircle className="w-4 h-4"/> Name mismatch detected deeply across different documents!
                   </div>
-                </div>
-
+                )}
               </div>
               )}
 
@@ -340,7 +329,7 @@ export default function Home() {
                        className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-black py-3 px-6 rounded-xl transition-all shadow-md hover:shadow-lg disabled:bg-gray-300 disabled:shadow-none disabled:text-gray-500 disabled:cursor-not-allowed"
                      >
                        {isValidating ? <RefreshCw className="w-5 h-5 animate-spin"/> : <ShieldAlert className="w-5 h-5"/>}
-                       Run Compliance AI Checker
+                       Run Compliance
                      </button>
                   </div>
                   

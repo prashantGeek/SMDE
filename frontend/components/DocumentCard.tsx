@@ -16,13 +16,11 @@ export default function DocumentCard({ doc }: { doc: any }) {
 
   const isExpired = doc.isExpired || doc.validity?.isExpired || (doc.validity?.daysUntilExpiry !== undefined && doc.validity?.daysUntilExpiry !== null && doc.validity?.daysUntilExpiry <= 0) || doc.flags?.some((f: any) => f.message?.toLowerCase().includes('expired'));
 
-  const borderColor = isExpired ? 'border-red-500 shadow-[0_0_0_2px_rgba(239,68,68,0.2)]' : 'border-green-500 shadow-[0_0_0_2px_rgba(34,197,94,0.2)]';
-
   return (
-    <div className={`bg-white rounded-xl shadow-sm border-2 overflow-hidden flex flex-col mb-6 transition-all ${borderColor}`}>
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex flex-col mb-4 transition-all">
       
       {/* 1. Header Section */}
-      <div className="px-6 py-4 border-b border-gray-100 flex items-start justify-between bg-slate-50">
+      <div className="px-4 py-3 border-b border-gray-100 flex items-start justify-between bg-slate-50">
         <div>
           <div className="flex items-center gap-3">
              <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
@@ -42,16 +40,16 @@ export default function DocumentCard({ doc }: { doc: any }) {
         </div>
       </div>
 
-      <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
         
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* 5. Validity Section */}
           {(doc.validity && typeof doc.validity === 'object' && Object.keys(doc.validity).length > 0) && (
-          <section className="bg-slate-50 rounded-lg p-4 border border-slate-100">
-            <h4 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2 uppercase tracking-wide">
+          <section className="bg-slate-50 rounded-md p-3 border border-slate-100">
+            <h4 className="text-sm font-bold text-slate-800 mb-2 flex items-center gap-2 uppercase tracking-wide">
               <Clock className="w-4 h-4 text-slate-500"/> Validity
             </h4>
-            <div className="grid grid-cols-2 gap-y-3 gap-x-4 text-sm">
+            <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-sm">
                <div><span className="text-slate-500 block text-xs">Issued On</span><span className="font-medium">{doc.validity.dateOfIssue || '—'}</span></div>
                <div><span className="text-slate-500 block text-xs">Expires On</span><span className="font-medium text-slate-900 font-bold">{doc.validity.dateOfExpiry || '—'}</span></div>
                
@@ -69,37 +67,37 @@ export default function DocumentCard({ doc }: { doc: any }) {
 
           {/* 6. Compliance Info */}
           {(doc.compliance && typeof doc.compliance === 'object') && (
-           <section className="bg-slate-50 rounded-lg p-4 border border-slate-100">
-             <h4 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2 uppercase tracking-wide">
+           <section className="bg-slate-50 rounded-md p-3 border border-slate-100">
+             <h4 className="text-sm font-bold text-slate-800 mb-2 flex items-center gap-2 uppercase tracking-wide">
                <ShieldAlert className="w-4 h-4 text-slate-500"/> Compliance
              </h4>
-             <div className="grid grid-cols-1 gap-y-2 text-sm">
+             <div className="grid grid-cols-1 gap-y-1 text-sm">
                 <div><span className="text-slate-500 inline-block w-32">Authority:</span><span className="font-medium">{doc.compliance.issuingAuthority || '—'}</span></div>
                 <div><span className="text-slate-500 inline-block w-32">Recognized:</span><span className="font-medium">{doc.compliance.recognizedAuthority ? 'Yes' : 'No'}</span></div>
-                {doc.compliance.limitations && <div><span className="text-slate-500 inline-block w-full">Limitations:</span><span className="font-medium text-amber-700">{doc.compliance.limitations}</span></div>}
+                {doc.compliance.limitations && <div><span className="text-slate-500 inline-block w-full mt-1">Limitations:</span><span className="font-medium text-amber-700 block">{doc.compliance.limitations}</span></div>}
              </div>
            </section>
           )}
 
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* 3. Medical Summary (Highlight if present) */}
           {(doc.medicalData && typeof doc.medicalData === 'object' && Object.keys(doc.medicalData).length > 0) && (
-            <section className="bg-blue-50/50 rounded-lg p-5 border border-blue-200 shadow-sm relative overflow-hidden">
+            <section className="bg-blue-50/50 rounded-md p-3 border border-blue-200 shadow-sm relative overflow-hidden">
                <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
-               <h4 className="text-sm font-bold text-blue-900 mb-4 flex items-center gap-2 uppercase tracking-wide">
+               <h4 className="text-sm font-bold text-blue-900 mb-2 flex items-center gap-2 uppercase tracking-wide">
                  Medical Summary
                </h4>
-               <div className="grid grid-cols-2 gap-4 text-sm mb-4">
-                  <div className="bg-white p-3 rounded border border-blue-100">
-                    <span className="text-slate-500 block text-xs mb-1">Fitness Status</span>
+               <div className="grid grid-cols-2 gap-3 text-sm mb-3">
+                  <div className="bg-white p-2 rounded border border-blue-100">
+                    <span className="text-slate-500 block text-[10px] mb-1">Fitness Status</span>
                     <span className={`font-bold ${doc.medicalData.fitnessResult?.toUpperCase() === 'FIT' ? 'text-green-600' : 'text-red-600'}`}>
                       {doc.medicalData.fitnessResult === 'FIT' ? '✅ FIT' : (doc.medicalData.fitnessResult || 'N/A')}
                     </span>
                   </div>
-                  <div className="bg-white p-3 rounded border border-blue-100">
-                    <span className="text-slate-500 block text-xs mb-1">Drug Test</span>
+                  <div className="bg-white p-2 rounded border border-blue-100">
+                    <span className="text-slate-500 block text-[10px] mb-1">Drug Test</span>
                     <span className={`font-bold ${doc.medicalData.drugTestResult?.toUpperCase() === 'NEGATIVE' ? 'text-green-600' : 'text-red-600'}`}>
                       {doc.medicalData.drugTestResult === 'NEGATIVE' ? '✅ NEGATIVE' : (doc.medicalData.drugTestResult || 'N/A')}
                     </span>
@@ -107,10 +105,10 @@ export default function DocumentCard({ doc }: { doc: any }) {
                </div>
                
                {doc.medicalData.restrictions && doc.medicalData.restrictions !== 'N/A' && (
-                 <div className="mb-2"><span className="text-sm font-semibold text-slate-700">Restrictions:</span> <span className="text-sm text-slate-600">{doc.medicalData.restrictions}</span></div>
+                 <div className="mb-2"><span className="text-[11px] font-semibold text-slate-700 uppercase tracking-wide">Restrictions:</span> <span className="text-[11px] text-slate-600">{doc.medicalData.restrictions}</span></div>
                )}
                {doc.medicalData.specialNotes && doc.medicalData.specialNotes !== 'N/A' && (
-                 <div><span className="text-sm font-semibold text-slate-700">Notes:</span> <span className="text-sm text-slate-600">{doc.medicalData.specialNotes}</span></div>
+                 <div><span className="text-[11px] font-semibold text-slate-700 uppercase tracking-wide">Notes:</span> <span className="text-[11px] text-slate-600">{doc.medicalData.specialNotes}</span></div>
                )}
             </section>
           )}
@@ -119,24 +117,24 @@ export default function DocumentCard({ doc }: { doc: any }) {
           {doc.fields && doc.fields.length > 0 && (
             <section>
               <h4 className="text-sm font-bold text-slate-800 mb-3 uppercase tracking-wide">Extracted Information</h4>
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {/* Group 1: Critical Fields */}
                 {doc.fields.filter((f: any) => f.importance === 'CRITICAL').length > 0 && (
                   <div>
-                    <h5 className="text-xs font-bold text-red-600 uppercase mb-2 flex items-center gap-1">
+                    <h5 className="text-[10px] font-bold text-red-600 uppercase mb-1 flex items-center gap-1">
                       <AlertCircle className="w-3 h-3"/> Critical Fields
                     </h5>
-                    <div className="bg-white border-l-2 border-red-500 rounded-r-lg shadow-sm">
-                      <table className="w-full text-sm text-left">
+                    <div className="bg-white border-l-2 border-red-500 rounded-r-md shadow-sm">
+                      <table className="w-full text-xs text-left">
                         <tbody>
                           {doc.fields.filter((f: any) => f.importance === 'CRITICAL').map((f: any, i: number) => (
                             <tr key={i} className="border-b border-slate-50 last:border-0 hover:bg-slate-50">
-                              <td className="px-3 py-2 font-medium text-slate-800 w-1/3">
+                              <td className="px-2 py-1.5 font-medium text-slate-800 w-1/3">
                                 {f.label}
                               </td>
-                              <td className="px-3 py-2 font-semibold text-slate-900">{f.value || '—'}</td>
-                              <td className="px-3 py-2 text-right">
-                                <span className={`px-2 py-0.5 rounded text-xs font-bold ${getStatusColor(f.status)}`}>{f.status || 'OK'}</span>
+                              <td className="px-2 py-1.5 font-semibold text-slate-900">{f.value || '—'}</td>
+                              <td className="px-2 py-1.5 text-right w-16">
+                                <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${getStatusColor(f.status)}`}>{f.status || 'OK'}</span>
                               </td>
                             </tr>
                           ))}
@@ -149,21 +147,21 @@ export default function DocumentCard({ doc }: { doc: any }) {
                 {/* Group 2: Important Fields */}
                 {doc.fields.filter((f: any) => f.importance === 'HIGH' || f.importance === 'MEDIUM').length > 0 && (
                   <div>
-                    <h5 className="text-xs font-bold text-amber-600 uppercase mb-2 flex items-center gap-1">
+                    <h5 className="text-[10px] font-bold text-amber-600 uppercase mb-1 flex items-center gap-1">
                       <AlertCircle className="w-3 h-3"/> Important Fields
                     </h5>
-                    <div className="bg-white border-l-2 border-amber-400 rounded-r-lg shadow-sm">
-                      <table className="w-full text-sm text-left">
+                    <div className="bg-white border-l-2 border-amber-400 rounded-r-md shadow-sm">
+                      <table className="w-full text-xs text-left">
                         <tbody>
                           {doc.fields.filter((f: any) => f.importance === 'HIGH' || f.importance === 'MEDIUM').map((f: any, i: number) => (
                             <tr key={i} className="border-b border-slate-50 last:border-0 hover:bg-slate-50">
-                              <td className="px-3 py-2 font-medium text-slate-700 w-1/3 flex items-center gap-2">
+                              <td className="px-2 py-1.5 font-medium text-slate-700 w-1/3 flex items-center gap-1">
                                 {f.label}
-                                {f.importance === 'HIGH' && <span className="bg-amber-100 text-amber-700 text-[10px] px-1.5 py-0.5 rounded font-bold">HIGH</span>}
+                                {f.importance === 'HIGH' && <span className="bg-amber-100 text-amber-700 text-[9px] px-1 py-0.5 rounded font-bold">HIGH</span>}
                               </td>
-                              <td className="px-3 py-2 font-medium text-slate-800">{f.value || '—'}</td>
-                              <td className="px-3 py-2 text-right">
-                                <span className={`px-2 py-0.5 rounded text-xs font-bold ${getStatusColor(f.status)}`}>{f.status || 'OK'}</span>
+                              <td className="px-2 py-1.5 font-medium text-slate-800">{f.value || '—'}</td>
+                              <td className="px-2 py-1.5 text-right w-16">
+                                <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${getStatusColor(f.status)}`}>{f.status || 'OK'}</span>
                               </td>
                             </tr>
                           ))}
@@ -176,14 +174,14 @@ export default function DocumentCard({ doc }: { doc: any }) {
                 {/* Group 3: Additional Info (LOW) */}
                 {doc.fields.filter((f: any) => !['CRITICAL', 'HIGH', 'MEDIUM'].includes(f.importance)).length > 0 && (
                   <div>
-                    <h5 className="text-xs font-bold text-slate-500 uppercase mb-2">Additional Info</h5>
-                    <div className="bg-white border border-slate-200 rounded-lg shadow-sm">
-                      <table className="w-full text-sm text-left">
+                    <h5 className="text-[10px] font-bold text-slate-500 uppercase mb-1">Additional Info</h5>
+                    <div className="bg-white border border-slate-200 rounded-md shadow-sm">
+                      <table className="w-full text-xs text-left">
                         <tbody>
                           {doc.fields.filter((f: any) => !['CRITICAL', 'HIGH', 'MEDIUM'].includes(f.importance)).map((f: any, i: number) => (
                             <tr key={i} className="border-b border-slate-50 last:border-0 hover:bg-slate-50">
-                              <td className="px-3 py-2 text-slate-600 w-1/3">{f.label}</td>
-                              <td className="px-3 py-2 text-slate-700">{f.value || '—'}</td>
+                              <td className="px-2 py-1.5 text-slate-600 w-1/3">{f.label}</td>
+                              <td className="px-2 py-1.5 text-slate-700">{f.value || '—'}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -198,18 +196,20 @@ export default function DocumentCard({ doc }: { doc: any }) {
       </div>
 
       {/* 7. Flags Section */}
-      <div className="px-6 py-4 bg-slate-50 border-t border-slate-200">
-         <h4 className="text-sm font-bold text-slate-800 mb-2 uppercase tracking-wide">Flags & Anomalies</h4>
+      <div className="px-4 py-3 bg-slate-50 border-t border-slate-200">
+         <h4 className="text-sm font-bold text-slate-800 mb-2 uppercase tracking-wide flex items-center gap-1">
+           Flags & Anomalies
+         </h4>
          {(!doc.flags || doc.flags.length === 0) ? (
-           <p className="text-sm text-green-700 font-medium flex items-center gap-1"><CheckCircle className="w-4 h-4"/> No issues detected</p>
+           <p className="text-xs text-green-700 font-medium flex items-center gap-1"><CheckCircle className="w-3 h-3"/> No issues detected</p>
          ) : (
-           <ul className="space-y-2">
+           <ul className="space-y-1">
              {doc.flags.map((flag: any, i: number) => (
-               <li key={i} className="flex items-start gap-2 text-sm bg-white p-2 rounded border border-slate-100 shadow-sm">
-                  {flag.severity === 'CRITICAL' && <AlertCircle className="w-5 h-5 text-red-600 shrink-0"/>}
-                  {flag.severity === 'HIGH' && <AlertCircle className="w-5 h-5 text-amber-600 shrink-0"/>}
-                  {flag.severity === 'MEDIUM' && <AlertCircle className="w-5 h-5 text-amber-500 shrink-0"/>}
-                  {flag.severity !== 'CRITICAL' && flag.severity !== 'HIGH' && flag.severity !== 'MEDIUM' && <AlertCircle className="w-5 h-5 text-blue-500 shrink-0"/>}
+               <li key={i} className="flex items-start gap-2 text-xs bg-white p-2 rounded border border-slate-100 shadow-sm leading-relaxed">
+                  {flag.severity === 'CRITICAL' && <AlertCircle className="w-4 h-4 text-red-600 shrink-0"/>}
+                  {flag.severity === 'HIGH' && <AlertCircle className="w-4 h-4 text-amber-600 shrink-0"/>}
+                  {flag.severity === 'MEDIUM' && <AlertCircle className="w-4 h-4 text-amber-500 shrink-0"/>}
+                  {flag.severity !== 'CRITICAL' && flag.severity !== 'HIGH' && flag.severity !== 'MEDIUM' && <AlertCircle className="w-4 h-4 text-blue-500 shrink-0"/>}
                   <div>
                     <span className={`font-bold text-xs mr-2 ${flag.severity === 'CRITICAL' ? 'text-red-700' : flag.severity === 'HIGH' ? 'text-amber-700' : 'text-slate-600'}`}>{flag.severity}</span>
                     <span className="text-slate-700">{flag.message}</span>

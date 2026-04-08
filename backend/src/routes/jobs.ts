@@ -45,6 +45,7 @@ router.get("/:jobId", async (req: Request, res: Response) => {
           id: ext.id,
           sessionId: ext.session_id,
           fileName: ext.file_name,
+          s3Url: ext.s3_url,
           documentType: ext.document_type,
           applicableRole: ext.applicable_role,
           confidence: ext.confidence,

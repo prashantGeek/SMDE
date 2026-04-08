@@ -104,6 +104,7 @@ router.get('/:sessionId', async (req, res) => {
       return {
         id: row.id,
         fileName: row.file_name,
+        s3Url: row.s3_url,
         documentType: row.document_type,
         applicableRole: row.applicable_role,
         category: row.category || 'OTHER',
@@ -129,13 +130,20 @@ router.get('/:sessionId', async (req, res) => {
 
     const jobsRes = await pool.query('SELECT id, status FROM jobs WHERE session_id = $1 AND status IN ($2, $3)', [sessionId, 'QUEUED', 'PROCESSING']);
 
+    // Fetch the latest validation/compliance report if it exists
+    const validationRes = await pool.query('SELECT result_json FROM validations WHERE session_id = $1 ORDER BY created_at DESC LIMIT 1', [sessionId]);
+    const latestValidation = validationRes.rowCount !== null && validationRes.rowCount > 0 && validationRes.rows[0].result_json 
+      ? JSON.parse(validationRes.rows[0].result_json) 
+      : null;
+
     res.json({
       sessionId,
       documentCount: documents.length,
       detectedRole,
       overallHealth,
       documents,
-      pendingJobs: jobsRes.rows.map(r => ({ id: r.id, status: r.status }))
+      pendingJobs: jobsRes.rows.map(r => ({ id: r.id, status: r.status })),
+      validationResult: latestValidation
     });
   } catch (error) {
     console.error('Error fetching session:', error);
@@ -261,6 +269,35 @@ router.get('/:sessionId/report', async (req, res) => {
     res.json(report);
   } catch (error) {
     console.error('Error generating report:', error);
+    res.status(500).json({ error: 'INTERNAL_ERROR', message: 'Unexpected server error' });
+  }
+});
+
+
+// DELETE /api/sessions/:sessionId
+router.delete('/:sessionId', async (req, res) => {
+  const { sessionId } = req.params;
+
+  try {
+    await pool.query('BEGIN');
+    
+    // Delete in order to respect foreign key constraints
+    await pool.query('DELETE FROM validations WHERE session_id = $1', [sessionId]);
+    await pool.query('DELETE FROM jobs WHERE session_id = $1', [sessionId]);
+    await pool.query('DELETE FROM extractions WHERE session_id = $1', [sessionId]);
+    const deleteRes = await pool.query('DELETE FROM sessions WHERE id = $1', [sessionId]);
+    
+    await pool.query('COMMIT');
+
+    if (deleteRes.rowCount === 0) {
+       res.status(404).json({ error: 'SESSION_NOT_FOUND', message: 'Session ID does not exist' });
+       return;
+    }
+
+    res.status(200).json({ message: 'Session deleted successfully' });
+  } catch (error) {
+    await pool.query('ROLLBACK');
+    console.error('Error deleting session:', error);
     res.status(500).json({ error: 'INTERNAL_ERROR', message: 'Unexpected server error' });
   }
 });

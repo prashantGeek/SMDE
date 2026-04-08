@@ -4,10 +4,38 @@ const PDFParser = require("pdf2json");
 
 function parsePdfBuffer(buffer: Buffer): Promise<string> {
   return new Promise((resolve, reject) => {
-    const pdfParser = new PDFParser(null, 1);
-    pdfParser.on("pdfParser_dataError", (errData: any) => reject(errData.parserError));
-    pdfParser.on("pdfParser_dataReady", (pdfData: any) => resolve(pdfParser.getRawTextContent()));
-    pdfParser.parseBuffer(buffer);
+    let handled = false;
+    const timeout = setTimeout(() => {
+      if (!handled) {
+        handled = true;
+        reject(new Error("PDF Parsing Timeout"));
+      }
+    }, 15000); // 15 seconds max for PDF parsing internally
+
+    try {
+      const pdfParser = new PDFParser(null, 1);
+      pdfParser.on("pdfParser_dataError", (errData: any) => {
+        if (!handled) {
+           handled = true;
+           clearTimeout(timeout);
+           reject(errData.parserError);
+        }
+      });
+      pdfParser.on("pdfParser_dataReady", (pdfData: any) => {
+        if (!handled) {
+           handled = true;
+           clearTimeout(timeout);
+           resolve(pdfParser.getRawTextContent());
+        }
+      });
+      pdfParser.parseBuffer(buffer);
+    } catch (error) {
+      if (!handled) {
+        handled = true;
+        clearTimeout(timeout);
+        reject(error);
+      }
+    }
   });
 }
 
@@ -130,7 +158,7 @@ export async function extractDocumentData(
   }
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30000); // 30-second timeout
+  const timeoutId = setTimeout(() => controller.abort(), 120000); // 120-second timeout
 
   try {
     let messageContent: any[] = [{ type: "text", text: instructionsMessage }];

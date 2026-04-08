@@ -1,10 +1,12 @@
 import express from "express";
 import swaggerJsdoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
+import "reflect-metadata";
 
 import extractRouter from "./routes/extract";
 import jobsRouter from "./routes/jobs";
 import sessionsRouter from "./routes/sessions";
+import { AppDataSource } from "./db/data-source";
 import initSchema from "./db/schema";
 import "./queue"; // Initialize BullMQ queue & worker
 
@@ -79,9 +81,15 @@ app.get("/", (_req, res) => {
 	res.status(200).send("Backend is running");
 });
 
-initSchema().then(() => {
+AppDataSource.initialize().then(async () => {
+        console.log("TypeORM Data Source has been initialized!");
+        
+        await initSchema(); // Optional: We can phase this out once Entities and Sync are active
+
         app.listen(port, host, () => {
                 console.log(`Backend service running at http://localhost:${port}`);
                 console.log(`Swagger docs available at http://localhost:${port}/api-docs`);
         });
+}).catch((err) => {
+        console.error("Error during Data Source initialization", err);
 });
