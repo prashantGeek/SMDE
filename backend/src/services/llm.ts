@@ -218,9 +218,7 @@ async function attemptJsonRepair(rawResponse: string): Promise<{ rawResponse: st
   }
 }
 
-export async function validateSessionDocuments(sessionId: string, payloads: any[]): Promise<{ rawResponse: string, parsedObject?: any, error?: string }> {
-  try {
-    const prompt = `
+const VALIDATION_PROMPT_TEMPLATE = `
 You are an expert maritime compliance officer. You are tasked with performing cross-document compliance validation for a single seafarer candidate's session.
 
 You will receive an array of JSON objects representing data extracted from multiple maritime documents (e.g. COC, Passport, Medical Certificates).
@@ -237,7 +235,7 @@ Your objectives:
 
 Use exactly this JSON format. No markdown, no code blocks:
 {
-  "sessionId": "${sessionId}",
+  "sessionId": "__SESSION_ID__",
   "holderProfile": {
     "name": "string",
     "dateOfBirth": "string",
@@ -266,8 +264,14 @@ Use exactly this JSON format. No markdown, no code blocks:
 }
 
 Input Documents:
-${JSON.stringify(payloads, null, 2)}
-    `;
+__INPUT_DOCUMENTS__
+`;
+
+export async function validateSessionDocuments(sessionId: string, payloads: any[]): Promise<{ rawResponse: string, parsedObject?: any, error?: string }> {
+  try {
+    const prompt = VALIDATION_PROMPT_TEMPLATE
+      .replace("__SESSION_ID__", sessionId)
+      .replace("__INPUT_DOCUMENTS__", JSON.stringify(payloads, null, 2));
 
     if (!openai) {
       console.warn("OpenAI not initialized... skipping validation mock");

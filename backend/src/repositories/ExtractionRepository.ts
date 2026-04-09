@@ -9,6 +9,10 @@ export class ExtractionRepository {
     return null;
   }
 
+  async createSessionExtractionIndex(sessionId: string) {
+    return await query("INSERT INTO sessions (id) VALUES ($1) ON CONFLICT (id) DO NOTHING", [sessionId]);
+  }
+
   async saveFailedExtraction(
     extractionId: string, 
     sessionId: string, 
@@ -67,6 +71,19 @@ export class ExtractionRepository {
         processingTimeMs
       ]
     );
+  }
+
+  async getExtractionsBySessionId(sessionId: string) {
+    return await query("SELECT * FROM extractions WHERE session_id = $1 ORDER BY created_at DESC", [sessionId]);
+  }
+
+  async getCompleteExtractionsBySessionId(sessionId: string) {
+    return await query("SELECT * FROM extractions WHERE session_id = $1 AND status = $2", [sessionId, "COMPLETE"]);
+  }
+
+  async getExtractionById(extractionId: string) {
+    const res = await query("SELECT * FROM extractions WHERE id = $1", [extractionId]);
+    return res.rows[0] || null;
   }
 
   async getAllExtractionsNamesAndRoles() {
