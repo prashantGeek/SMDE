@@ -3,9 +3,9 @@ import swaggerJsdoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
 import "reflect-metadata";
 
-import extractRouter from "./routes/extract";
-import jobsRouter from "./routes/jobs";
-import sessionsRouter from "./routes/sessions";
+import extractRouter from "./routes/extract.js";
+import jobsRouter from "./routes/jobs.js";
+import sessionsRouter from "./routes/sessions.js";
 import { AppDataSource } from "./db/data-source";
 import initSchema from "./db/schema";
 import "./queue"; // Initialize BullMQ queue & worker

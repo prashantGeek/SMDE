@@ -5,16 +5,67 @@ import axios from "axios";
 import { UploadCloud, CheckCircle, FileText, AlertCircle, RefreshCw, ShieldAlert, User, Clock, Plus, Trash2 } from "lucide-react";
 import DocumentCard from "../components/DocumentCard";
 
+type SessionSummary = {
+  id: string;
+  candidateName: string;
+  role: string;
+  createdAt: string;
+};
+
+type UploadErrorResponse = {
+  error?: string;
+};
+
+type ValidationCheck = {
+  field?: string;
+  isConsistent?: boolean;
+  status?: string;
+  description?: string;
+  message?: string;
+};
+
+type ValidationReport = {
+  overallStatus?: string;
+  recommendations?: string[];
+  consistencyChecks?: ValidationCheck[];
+  missingDocuments?: string[];
+  expiringDocuments?: { documentType?: string; isExpired?: boolean }[];
+};
+
+type DocumentFlag = {
+  severity?: string;
+  message?: string;
+};
+
+type DocumentValidity = {
+  isExpired?: boolean;
+  daysUntilExpiry?: number | null;
+  dateOfIssue?: string | null;
+  dateOfExpiry?: string | null;
+  revalidationRequired?: boolean | null;
+};
+
+type DocumentRecord = {
+  holderName?: string;
+  dateOfBirth?: string;
+  nationality?: string;
+  sirbNumber?: string;
+  applicableRole?: string;
+  documentType?: string;
+  isExpired?: boolean;
+  validity?: DocumentValidity;
+  flags?: DocumentFlag[];
+};
+
 export default function Home() {
-  const [sessions, setSessions] = useState<{id: string, candidateName: string, role: string, createdAt: string}[]>([]);
+  const [sessions, setSessions] = useState<SessionSummary[]>([]);
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const [documents, setDocuments] = useState<any[]>([]);
+  const [documents, setDocuments] = useState<DocumentRecord[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [processingSessionId, setProcessingSessionId] = useState<string | null>(null);
   const [isValidating, setIsValidating] = useState(false);
-  const [report, setReport] = useState<any>(null);
+  const [report, setReport] = useState<ValidationReport | null>(null);
   const [mode, setMode] = useState("async");
-  const [health, setHealth] = useState("OK");
   const [detectedRole, setDetectedRole] = useState("UNKNOWN");
 
   const fetchAllSessions = async () => {
@@ -33,10 +84,14 @@ export default function Home() {
   const fetchSession = async (id: string) => {
     try {
       const res = await axios.get(`/api/sessions/${id}`);
-      setDocuments(res.data.documents || []);
-      setHealth(res.data.overallHealth || "OK");
-      setDetectedRole(res.data.detectedRole || "UNKNOWN");
-      setReport(res.data.validationResult || null);
+      const sessionData = res.data as {
+        documents?: DocumentRecord[];
+        detectedRole?: string;
+        validationResult?: ValidationReport | null;
+      };
+      setDocuments(sessionData.documents || []);
+      setDetectedRole(sessionData.detectedRole || "UNKNOWN");
+      setReport(sessionData.validationResult || null);
       fetchAllSessions(); // refresh the sidebar list in case names updated
     } catch (e) {
       console.error("Failed to fetch session:", e);
@@ -47,7 +102,6 @@ export default function Home() {
     setSessionId(null);
     setDocuments([]);
     setReport(null);
-    setHealth("OK");
     setDetectedRole("UNKNOWN");
   };
 
@@ -86,9 +140,13 @@ export default function Home() {
           }
         }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Upload failed", error);
-      alert(error.response?.data?.error || "Failed to upload document");
+      if (axios.isAxiosError<UploadErrorResponse>(error)) {
+        alert(error.response?.data?.error || "Failed to upload document");
+      } else {
+        alert("Failed to upload document");
+      }
     } finally {
       setIsUploading(false);
       e.target.value = "";
@@ -134,7 +192,7 @@ export default function Home() {
       await axios.delete(`/api/sessions/${id}`);
       if (sessionId === id) handleCreateNewUser();
       fetchAllSessions();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Failed to delete session", err);
       alert("Failed to delete the candidate.");
     }
@@ -148,18 +206,18 @@ export default function Home() {
     role: detectedRole !== 'UNKNOWN' ? detectedRole : (documents.find(d => d.applicableRole && d.applicableRole !== 'N/A')?.applicableRole || '—'),
   };
 
-  const isDocExpired = (d: any) => {
+  const isDocExpired = (d: DocumentRecord) => {
     if (d.isExpired) return true;
     if (d.validity?.isExpired) return true;
     if (d.validity?.daysUntilExpiry !== null && d.validity?.daysUntilExpiry !== undefined && d.validity?.daysUntilExpiry <= 0) return true;
-    if (d.flags?.some((f: any) => f.message?.toLowerCase().includes('expired'))) return true;
+    if (d.flags?.some((f: DocumentFlag) => f.message?.toLowerCase().includes('expired'))) return true;
     return false;
   };
 
   const criticalIssues: string[] = [];
   documents.forEach(doc => {
     if (isDocExpired(doc)) criticalIssues.push(`[${doc.documentType}] Document is expired`);
-    doc.flags?.forEach((flag: any) => {
+    doc.flags?.forEach((flag: DocumentFlag) => {
       if (flag.severity === 'CRITICAL') {
         criticalIssues.push(`[${doc.documentType}] ${flag.message}`);
       }
@@ -168,7 +226,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 font-sans flex overflow-hidden">
-      <aside className="w-[340px] bg-white border-r border-gray-200 h-screen flex flex-col shrink-0 sticky top-0 shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-10">
+      <aside className="w-85 bg-white border-r border-gray-200 h-screen flex flex-col shrink-0 sticky top-0 shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-10">
         <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-blue-900 text-white">
           <h2 className="text-xl font-bold flex items-center gap-2">
             <User className="text-blue-300 w-6 h-6"/> Candidates Directory
@@ -288,7 +346,7 @@ export default function Home() {
                         {report.missingDocuments?.map((m: string, i: number) => (
                           <div key={i} className="flex items-center gap-2"><AlertCircle className="w-4 h-4"/> Missing required document: {m}</div>
                         ))}
-                        {report.expiringDocuments?.map((m: any, i: number) => (
+                        {report.expiringDocuments?.map((m: { documentType?: string; isExpired?: boolean }, i: number) => (
                           m.isExpired && <div key={i} className="flex items-center gap-2"><AlertCircle className="w-4 h-4"/> {m.documentType} is expired</div>
                         ))}
                       </div>
@@ -315,7 +373,7 @@ export default function Home() {
                        <div>
                           <span className="text-gray-500 block text-[10px] uppercase font-extrabold mb-2 tracking-widest">AI Consistency Checks</span>
                           <ul className="space-y-2 bg-gray-50 p-4 rounded-lg border border-gray-100">
-                            {report.consistencyChecks?.map((chk: any, i: number) => (
+                            {report.consistencyChecks?.map((chk: ValidationCheck, i: number) => (
                               <li key={i} className="flex items-start gap-2 text-xs font-bold border-b border-gray-200 pb-2 last:border-0 last:pb-0">
                                 {chk.isConsistent === true || chk.status === 'OK' || chk.status === 'PASSED' ? (
                                   <CheckCircle className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />

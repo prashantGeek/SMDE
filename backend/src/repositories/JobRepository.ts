@@ -8,6 +8,10 @@ export class JobRepository {
     );
   }
 
+  async getActiveJobsForSession(sessionId: string) {
+    return await query('SELECT id, status FROM jobs WHERE session_id = $1 AND status IN ($2, $3)', [sessionId, 'QUEUED', 'PROCESSING']);
+  }
+
   async markJobProcessing(jobId: string) {
     await query("UPDATE jobs SET status = $1, started_at = CURRENT_TIMESTAMP WHERE id = $2", ["PROCESSING", jobId]);
   }
