@@ -1,42 +1,22 @@
 import OpenAI from "openai";
 import dotenv from "dotenv";
-const PDFParser = require("pdf2json");
 
-function parsePdfBuffer(buffer: Buffer): Promise<string> {
-  return new Promise((resolve, reject) => {
-    let handled = false;
-    const timeout = setTimeout(() => {
-      if (!handled) {
-        handled = true;
-        reject(new Error("PDF Parsing Timeout"));
-      }
-    }, 15000); // 15 seconds max for PDF parsing internally
+function getResponseOutputText(response: any): string {
+  if (typeof response?.output_text === "string" && response.output_text.trim()) {
+    return response.output_text;
+  }
 
-    try {
-      const pdfParser = new PDFParser(null, 1);
-      pdfParser.on("pdfParser_dataError", (errData: any) => {
-        if (!handled) {
-           handled = true;
-           clearTimeout(timeout);
-           reject(errData.parserError);
-        }
-      });
-      pdfParser.on("pdfParser_dataReady", (pdfData: any) => {
-        if (!handled) {
-           handled = true;
-           clearTimeout(timeout);
-           resolve(pdfParser.getRawTextContent());
-        }
-      });
-      pdfParser.parseBuffer(buffer);
-    } catch (error) {
-      if (!handled) {
-        handled = true;
-        clearTimeout(timeout);
-        reject(error);
+  const outputBlocks = Array.isArray(response?.output) ? response.output : [];
+  for (const block of outputBlocks) {
+    const contents = Array.isArray(block?.content) ? block.content : [];
+    for (const item of contents) {
+      if (typeof item?.text === "string" && item.text.trim()) {
+        return item.text;
       }
     }
-  });
+  }
+
+  return "";
 }
 
 dotenv.config();
@@ -161,39 +141,37 @@ export async function extractDocumentData(
   const timeoutId = setTimeout(() => controller.abort(), 120000); // 120-second timeout
 
   try {
-    let messageContent: any[] = [{ type: "text", text: instructionsMessage }];
+    const fileData = `data:${mimeType};base64,${base64Data}`;
+    const content: any[] = [{ type: "input_text", text: instructionsMessage }];
+
     if (mimeType === "application/pdf") {
-       try {
-         const pdfBuffer = Buffer.from(base64Data, "base64");
-         const parsedText = await parsePdfBuffer(pdfBuffer);
-         messageContent.push({ type: "text", text: "--- PDF EXTRACTED TEXT ---\n" + parsedText });
-       } catch (err) {
-         console.error("PDF Parsing Failed:", err);
-         messageContent.push({ type: "text", text: "Failed to read PDF text. Proceeding with file metadata only." });
-       }
+      content.push({
+        type: "input_file",
+        filename: fileName || "document.pdf",
+        file_data: fileData,
+      });
     } else {
-       messageContent.push({
-         type: "image_url",
-         image_url: {
-           url: `data:${mimeType};base64,${base64Data}`,
-           detail: "high"
-         }
-       });
+      content.push({
+        type: "input_image",
+        image_url: fileData,
+        detail: "high",
+      });
     }
 
-    const response = await openai.chat.completions.create({
+    const response = await openai.responses.create({
       model,
-      messages: [
+      temperature: 0,
+      input: [
         {
           role: "user",
-          content: messageContent
+          content,
         }
       ]
     }, { signal: controller.signal as any });
 
     clearTimeout(timeoutId);
 
-    const rawResponse = response.choices[0]?.message?.content || "";
+    const rawResponse = getResponseOutputText(response);
     
     try {
       let parsedObject = extractJson(rawResponse);

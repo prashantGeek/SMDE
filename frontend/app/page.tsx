@@ -317,10 +317,10 @@ export default function Home() {
                           <ul className="space-y-2 bg-gray-50 p-4 rounded-lg border border-gray-100">
                             {report.consistencyChecks?.map((chk: any, i: number) => (
                               <li key={i} className="flex items-start gap-2 text-xs font-bold border-b border-gray-200 pb-2 last:border-0 last:pb-0">
-                                {chk.status === 'OK' || chk.status === 'PASSED' ? (
+                                {chk.isConsistent === true || chk.status === 'OK' || chk.status === 'PASSED' ? (
                                   <CheckCircle className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
                                 ) : (
-                                  <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                                  <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                                 )}
                                 <span className="text-gray-800 leading-snug">{chk.description || chk.message || JSON.stringify(chk)}</span>
                               </li>
