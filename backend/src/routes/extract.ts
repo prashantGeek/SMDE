@@ -6,6 +6,54 @@ import { ExtractionController } from "../controllers/ExtractionController";
 const router = Router();
 const extractionController = new ExtractionController();
 
+/**
+ * @swagger
+ * /api/extract:
+ *   post:
+ *     tags:
+ *       - Extraction
+ *     summary: Upload and extract a document
+ *     description: Accepts a PDF or image file, stores it, and either processes it synchronously or queues it for async extraction.
+ *     parameters:
+ *       - in: query
+ *         name: mode
+ *         schema:
+ *           type: string
+ *           enum: [sync, async]
+ *         required: false
+ *         description: Extraction mode. Defaults to async when omitted.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - document
+ *             properties:
+ *               document:
+ *                 type: string
+ *                 format: binary
+ *               sessionId:
+ *                 type: string
+ *                 description: Existing session ID to append the document to.
+ *     responses:
+ *       200:
+ *         description: Document extracted successfully or deduplicated.
+ *       202:
+ *         description: Document queued for async processing.
+ *       400:
+ *         description: Bad request or unsupported upload.
+ *       413:
+ *         description: File too large.
+ *       422:
+ *         description: Extraction failed but raw response was stored.
+ *       429:
+ *         description: Rate limited.
+ *       500:
+ *         description: Unexpected server error.
+ */
+
 // Rate limiter for POST /api/extract
 const extractLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
