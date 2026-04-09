@@ -7,6 +7,7 @@ SMDE is a full-stack document intelligence platform for maritime hiring workflow
 - Source Repository (GitHub): https://github.com/prashantGeek/SMDE
 - Frontend (Vercel): https://smde-one.vercel.app
 - Backend (AWS EC2): Hosted on an EC2 instance and exposed through the public API domain (for example, https://smde.stackvise.in)
+- Demo Recording (Loom): https://www.loom.com/share/054fd96883a64b1295d5623b0ba9cd60
 
 ## Project Architecture (Brief)
 
