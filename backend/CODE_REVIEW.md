@@ -47,4 +47,4 @@ const result = JSON.parse(response.content[0].text);
 **Fix:** We need a recovery strategy. Try extracting the substring between the first `{` and last `}` using regex before parsing, and gracefully handle the `catch` if it still fails.
 
 ### Summary
-Really good proof of concept! Let's pair up to tackle the database storage and environment variables first. Once we drop the local disk saving and global arrays, this will be in much better shape for production. Let me know when you've pushed an update!
+Really good proof of concept! Let's pair up to tackle the database storage and environment variables first. Once we drop the local disk saving and global arrays, this will be in much better shape for production.
