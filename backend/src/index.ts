@@ -28,6 +28,10 @@ const swaggerDefinition = {
 	},
 	servers: [
 		{
+			url: "https://smde.stackvise.in",
+			description: "Production"
+		},
+		{
 			url: `http://localhost:${port}`,
 			description: "Local development"
 		}
