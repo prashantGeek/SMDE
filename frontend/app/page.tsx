@@ -339,7 +339,7 @@ export default function Home() {
                     </h2>
                     <p className="text-lg font-bold opacity-80 mt-1">
                       {report.overallStatus === 'REJECTED' ? 'Critical compliance issue detected' :
-                       report.overallStatus === 'APPROVED' ? 'Cleared for deployment' : 'Requires manual review'}
+                       report.overallStatus === 'APPROVED' ? '' : 'Requires manual review'}
                     </p>
                     {report.overallStatus === 'REJECTED' && (
                       <div className="mt-4 text-red-800 font-medium bg-white/50 p-4 rounded-lg border border-red-200">
